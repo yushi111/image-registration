@@ -1,0 +1,9 @@
+#! /bin/bash
+
+git add .
+git commit -m "$1"
+echo "Push to github?"
+read varname
+if [[ $varname=="y" ]];then
+    git push origin main
+fi

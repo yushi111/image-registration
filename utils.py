@@ -9,7 +9,12 @@ def get_ref(img4d):
     return np.average(img4d,axis=3)
 
 def get_data(path=None):
+    """
+    path: path to the data mat file
+    output: numpy 4d array
+    caveats: mat files may have different key name
+    """
     if not path:
         path='/ll3/data/3/human/20220426_GIMRI_fMRI/preprocessed/s019a1001.mat'
     data=mat73.loadmat(path)
-    return data
+    return data['mat']
