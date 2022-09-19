@@ -73,5 +73,6 @@ def sampler(data,displacement):
     data=torch.unsqueeze(data,0)
     data=torch.unsqueeze(data,0)
     displacement=torch.unsqueeze(displacement,0)
-    #
+    #normalize the displacement
+    
     out=F.grid_sample(data,displacement)
