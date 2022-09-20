@@ -1,11 +1,12 @@
 from concurrent.futures import process
 import imp
+from pickle import TRUE
 import numpy as np
 import mat73
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 import torch
-from torch import F
+import torch.nn.functional as F
 
 def get_ref(img4d):
     """
@@ -69,10 +70,24 @@ def sampler(data,displacement):
     """
     data: 3d image (N,W,D) tensor
     displacement: displacement vector for each dimensions (N,W,D,3) tensor
+    (N,W,D,0) for z axis, and 1 for y, 2 for x
     """
+    N,W,D=data.shape
     data=torch.unsqueeze(data,0)
     data=torch.unsqueeze(data,0)
-    displacement=torch.unsqueeze(displacement,0)
-    #normalize the displacement
     
-    out=F.grid_sample(data,displacement)
+    xaxis=torch.linspace(0,N-1,steps=N,dtype=torch.float64)
+    yaxis=torch.linspace(0,W-1,steps=W,dtype=torch.float64)
+    zaxis=torch.linspace(0,D-1,steps=D,dtype=torch.float64)
+    xx,yy,zz=torch.meshgrid(xaxis,yaxis,zaxis)
+    coordinates=torch.stack((zz,yy,xx),dim=3)
+
+    total_displacement=coordinates+displacement
+
+    #normalize:
+    for i,s in enumerate([D,W,N]):
+        total_displacement[:,:,:,i]=2*total_displacement[:,:,:,i]/(s-1)-1
+    
+    total_displacement=total_displacement.unsqueeze(0)
+    out=F.grid_sample(data,total_displacement,padding_mode="border",align_corners=True)
+    return out.squeeze()
