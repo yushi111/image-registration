@@ -13,7 +13,15 @@ def get_ref(img4d):
     requirement: input is a 4d image 
     output: find average at the time dimension
     """
-    return np.average(img4d,axis=3)
+    return torch.tensor(np.average(img4d,axis=3))
+
+def linear_mapping(img4d):
+    """
+    linearly increase the intensity range of image
+    """
+    min_intensity=np.min(img4d)
+    max_intensity=np.max(img4d)
+    
 
 def get_data(path=None):
     """
