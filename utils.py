@@ -21,7 +21,7 @@ def linear_mapping(img4d):
     """
     min_intensity=np.min(img4d)
     max_intensity=np.max(img4d)
-    
+    return (img4d-min_intensity)/(max_intensity-min_intensity)*255
 
 def get_data(path=None):
     """

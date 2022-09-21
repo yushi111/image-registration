@@ -18,14 +18,17 @@ class DisplaceNet(nn.Module):
         super().__init__()
         self.net1=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
+            nn.ReLU(),
             nn.Conv3d(2,1,kernel_size=3,padding=1)
         )
         self.net2=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
+            nn.ReLU(),
             nn.Conv3d(2,1,kernel_size=3,padding=1)
         )
         self.net3=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
+            nn.ReLU(),
             nn.Conv3d(2,1,kernel_size=3,padding=1)
         )
         for layer in self.net1:

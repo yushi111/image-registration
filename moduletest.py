@@ -5,7 +5,7 @@ import torch
 from torch.autograd import Variable
 import torch.optim as optim
 data=get_data()
-
+data=linear_mapping(data)
 filtered=low_pass_3d(data,sigma=3)
 
 
@@ -32,10 +32,12 @@ EPOCH=10
 for epoch in range(EPOCH):
     optimizer.zero_grad()
     displacement=net(initial_crd)
+    displacement=torch.clamp(displacement,-5,5)
+    #displacement.backward()
+    #print(initial_crd.grad)
     out=sampler(data=data[:,:,:,15],displacement=displacement)
     loss=torch.sum(torch.abs(out-ref_img[:,:,:]))
     loss.backward()
     optimizer.step()
     print(epoch,loss)
-    print(displacement)
-    show_img(data=ref_img[:,:,20],additional_data=out.detach()[:,:,15],name=f"epoch {epoch}")
+    show_img(data=ref_img[:,:,20],additional_data=out.detach()[:,:,20],name=f"epoch {epoch}")
