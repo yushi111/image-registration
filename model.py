@@ -19,17 +19,23 @@ class DisplaceNet(nn.Module):
         self.net1=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
             nn.ReLU(),
-            nn.Conv3d(2,1,kernel_size=3,padding=1)
+            nn.Conv3d(2,1,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.Conv3d(1,1,kernel_size=5,padding=2)
         )
         self.net2=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
             nn.ReLU(),
-            nn.Conv3d(2,1,kernel_size=3,padding=1)
+            nn.Conv3d(2,1,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.Conv3d(1,1,kernel_size=5,padding=2)
         )
         self.net3=nn.Sequential(
             nn.Conv3d(3,2,kernel_size=3,padding=1),
             nn.ReLU(),
-            nn.Conv3d(2,1,kernel_size=3,padding=1)
+            nn.Conv3d(2,1,kernel_size=3,padding=1),
+            nn.ReLU(),
+            nn.Conv3d(1,1,kernel_size=5,padding=2)
         )
         for layer in self.net1:
             weights_init(layer)
