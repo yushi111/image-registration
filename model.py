@@ -59,3 +59,4 @@ class DisplaceNet(nn.Module):
         dis_z=torch.permute(dis_z,(0,2,3,4,1)).squeeze()
         displacement=torch.stack((dis_z,dis_y,dis_x),dim=3)
         return displacement
+

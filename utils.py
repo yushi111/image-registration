@@ -70,6 +70,7 @@ def show_img(data,name="test.jpg",additional_data=None,argv=None):
         raise NotImplementedError("Only support 2/3 D data")
     
     plt.cla()
+    fig.clear(True)
 
 def low_pass_3d(data,sigma):
     """
@@ -172,3 +173,21 @@ def get_3d_coordinate(N,W,D,device='cpu'):
     xx,yy,zz=torch.meshgrid(xaxis,yaxis,zaxis)
     initial_crd=torch.stack((zz,yy,xx),dim=3).to(device)
     return initial_crd
+
+def divergence(field):
+    div_value=0
+    divs=torch.gradient(field,dim=[0,1,2])
+    for div in divs:
+        div_value+=torch.sum(torch.abs(div))
+    return div_value
+
+def plot_loss(step,loss,epoch,t):
+    fig,ax=plt.subplots()
+    ax.plot(step,loss,'r',lw=1)
+    ax.set_title("loss")
+    ax.set_xlabel("steps")
+    ax.set_ylabel("loss")
+    ax.legend("train_loss")
+    fig.savefig(f"loss at {epoch}num{t}.png")
+    fig.clear(True)
+

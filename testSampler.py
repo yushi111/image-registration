@@ -10,6 +10,16 @@ from tqdm import tqdm
 data=get_data()
 data=torch.tensor(data)
 N,W,D,T=data.shape
+
+
+
+displace=torch.zeros((N,W,D,3))
+displace[:,:,:,2]=50
+out=sampler(displacement=displace,data=data[:,:,:,20])
+show_img(data=data[:,:,20,20],additional_data=out[:,:,20],name='x10.jpg')
+
+
+"""
 rotation_x=get_3d_rotation_matrix(20,'x').double()
 rotation_y=get_3d_rotation_matrix(20,'y').double()
 rotation_z=get_3d_rotation_matrix(20,'z').double()
@@ -27,3 +37,4 @@ new_coordinate=torch.reshape(torch.mm(torch.reshape(inic,(-1,3)),rotation_z),(N,
 #print(new_coordinate)
 out=sampler(displacement=new_coordinate-inic,data=data[:,:,:,20])
 show_img(data=data[:,:,20,20],additional_data=out[:,:,20],name='rotate20z.jpg')
+"""
