@@ -1,6 +1,5 @@
 from concurrent.futures import process
 import imp
-from pickle import TRUE
 import numpy as np
 import mat73
 import matplotlib.pyplot as plt
@@ -10,6 +9,7 @@ import matplotlib.cm as cm
 from scipy.ndimage import gaussian_filter
 import torch
 import torch.nn.functional as F
+from math import sqrt,floor,ceil
 
 def get_ref(img4d):
     """
@@ -110,30 +110,47 @@ def sampler(data,displacement,devices='cpu'):
     out=F.grid_sample(data,total_displacement,padding_mode="border",align_corners=True)
     return out.squeeze()
 
-def create_video(img4d,name="slice20.gif"):
+def create_video(img4d,slices=[20],name="slice20.gif"):
+    """
+    img4d: 4d image with the last dimension as time
+    slices: a list which contains the 2d slices to be shown
+    name: end with gif
+    """
     img = [] # some array of images
     frames = [] # for storing the generated images
-
-    fig, ax = plt.subplots()
-    x,y,ss,tt =img4d.shape
-    ss=[20]
+    N,S,W,T =img4d.shape
+    if len(slices)==1:
+        fig, ax = plt.subplots()
+        for t in range(T):
+            frames.append([ax.imshow(img4d[:,:,slices[0],t],cmap=cm.Greys_r,animated=True)])
+    else:
+        nrows=floor(sqrt(len(slices)))
+        ncols=ceil(sqrt(len(slices)))
+        if nrows*ncols<len(slices):
+            nrows+=1
+        fig, ax = plt.subplots(nrows=nrows,ncols=ncols)
+        for t in range(T):
+            for idx,s in enumerate(slices):
+                ax[idx//ncols][idx%ncols].imshow(img4d[:,:,s,t],cmap=cm.Greys_r,animated=True)
+            canvas=fig.get_figure()
+            frames.append([canvas])
+            
+            
+    
 
     """
-
     ss=[1,10,11,20]
     for i,f in enumerate(ss):
         for t in range(tt):
             axs.plot(data[:,:,f,t],cmap=cm.Greys_r)
             #frames.append([axs[i].imshow(data[:,:,f,t],cmap=cm.Greys_r,animated=True)])
         #plt.show()
-    """
-
     for s in ss:
         for t in range(tt):
             frames.append([ax.imshow(img4d[:,:,s,t],cmap=cm.Greys_r,animated=True)])
         #plt.show()
-
-
+    """
+    
     ani = animation.ArtistAnimation(fig, frames, interval=250, blit=True,
                                     repeat_delay=100)
     #ani = animation.ArtistAnimation(fig, frames, interval=50, blit=True,
@@ -181,13 +198,26 @@ def divergence(field):
         div_value+=torch.sum(torch.abs(div))
     return div_value
 
-def plot_loss(step,loss,epoch,t):
+def plot_loss(step,loss,epoch,t,div=None):
     fig,ax=plt.subplots()
     ax.plot(step,loss,'r',lw=1)
+    if div is not None:
+        ax.plot(step,div,'b',lw=1)
     ax.set_title("loss")
     ax.set_xlabel("steps")
     ax.set_ylabel("loss")
-    ax.legend("train_loss")
+    ax.legend(['Total loss','divergence'])
     fig.savefig(f"loss at {epoch}num{t}.png")
     fig.clear(True)
 
+def show_hist(img3d,name='hist.png'):
+    """
+    img3d: target 3d image to show its voxel intensity distribution
+    
+    """
+    voxels=np.reshape(img3d,(-1,))
+    fig,ax=plt.subplots()
+    plt.hist(voxels,bins=256)
+    plt.xlabel('Intensity')
+    plt.ylabel('Count')
+    plt.savefig(name)
