@@ -10,6 +10,9 @@ from scipy.ndimage import gaussian_filter
 import torch
 import torch.nn.functional as F
 from math import sqrt,floor,ceil
+import nibabel as nib 
+from mpl_toolkits.mplot3d import axes3d
+from tqdm import tqdm
 
 def get_ref(img4d):
     """
@@ -128,12 +131,15 @@ def create_video(img4d,slices=[20],name="slice20.gif"):
         ncols=ceil(sqrt(len(slices)))
         if nrows*ncols<len(slices):
             nrows+=1
-        fig, ax = plt.subplots(nrows=nrows,ncols=ncols)
+        fig, ax = plt.subplots()
+        img_data=np.zeros((N*nrows,S*ncols))
+
         for t in range(T):
             for idx,s in enumerate(slices):
-                ax[idx//ncols][idx%ncols].imshow(img4d[:,:,s,t],cmap=cm.Greys_r,animated=True)
-            canvas=fig.get_figure()
-            frames.append([canvas])
+                row_start=idx//ncols
+                col_start=idx%ncols
+                img_data[row_start*N:(row_start+1)*N,col_start*S:(col_start+1)*S]=img4d[:,:,slices[idx],t]
+            frames.append([ax.imshow(img_data,cmap=cm.Greys_r,animated=True)])
             
             
     
@@ -220,4 +226,20 @@ def show_hist(img3d,name='hist.png'):
     plt.hist(voxels,bins=256)
     plt.xlabel('Intensity')
     plt.ylabel('Count')
+    plt.savefig(name)
+
+def get_nii_data(path=None):
+    if path is None:
+        path='file1410.nii.gz'
+    nii_img=nib.load(path)
+    nii_data=nii_img.get_fdata()
+    return nii_data
+
+def plot_3dvector_field(initial_coor,displacement,name='vectorfield'):
+    X=15
+    Y=15
+    Z=7
+    fig=plt.figure()
+    ax=fig.gca(projection='3d')
+    ax.quiver(initial_coor[::X,::Y,::Z,0],initial_coor[::X,::Y,::Z,1],initial_coor[::X,::Y,::Z,2],displacement[::X,::Y,::Z,0],displacement[::X,::Y,::Z,1],displacement[::X,::Y,::Z,2],length=1.5)
     plt.savefig(name)
