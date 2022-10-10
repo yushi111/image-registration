@@ -226,6 +226,7 @@ def show_hist(img3d,name='hist.png'):
     plt.hist(voxels,bins=256)
     plt.xlabel('Intensity')
     plt.ylabel('Count')
+    plt.ylim([0,100000])
     plt.savefig(name)
 
 def get_nii_data(path=None):
@@ -238,8 +239,53 @@ def get_nii_data(path=None):
 def plot_3dvector_field(initial_coor,displacement,name='vectorfield'):
     X=15
     Y=15
-    Z=7
+    Z=10
     fig=plt.figure()
     ax=fig.gca(projection='3d')
-    ax.quiver(initial_coor[::X,::Y,::Z,0],initial_coor[::X,::Y,::Z,1],initial_coor[::X,::Y,::Z,2],displacement[::X,::Y,::Z,0],displacement[::X,::Y,::Z,1],displacement[::X,::Y,::Z,2],length=1.5)
+    #ax.quiver(initial_coor[::X,::Y,::Z,0],initial_coor[::X,::Y,::Z,1],initial_coor[::X,::Y,::Z,2],displacement[::X,::Y,::Z,0],displacement[::X,::Y,::Z,1],displacement[::X,::Y,::Z,2],length=1.5)
+    ax.quiver(initial_coor[160:170,160:170,::Z,0],initial_coor[160:170,160:170,::Z,1],initial_coor[160:170,160:170,::Z,2],displacement[160:170,160:170,::Z,0],displacement[160:170,160:170,::Z,1],displacement[160:170,160:170,::Z,2],length=1,arrow_length_ratio=0.3)
     plt.savefig(name)
+    plt.show()
+
+
+def get_filtering_kernel(N,W,D,start,end):
+    """
+    generate filtering kernel for blurring
+    N,W,D: dimensions of 3d image 
+    start: starting position of frequency cutting [0,max(N,W,D)/2]
+    end: end position of frequency cutting 
+    """
+    factors=[N,W,D]
+    max_dim=max(factors)
+    mask=[np.zeros((N,),dtype=np.float64),np.zeros((W,),dtype=np.float64),np.zeros((D,),dtype=np.float64)]
+    
+    for i,d in enumerate([N,W,D]):
+        factors[i]=d/max_dim
+        mask[i][d//2-round(start*factors[i]):d//2+round(start*factors[i])]=1
+        slope=1./(round(end*factors[i])-round(start*factors[i]))
+        for j in range(round(end*factors[i])-round(start*factors[i])):
+            mask[i][d//2-round(end*factors[i])+j]=slope*j
+            if d%2==1:
+                mask[i][d//2+round(start*factors[i])+j]=1-slope*j
+            else:
+                mask[i][d//2+round(start*factors[i])+j-1]=1-slope*j
+        mask[i]=1-mask[i]
+    
+    
+    xv,yv,zv=np.meshgrid(mask[1],mask[0],mask[2])
+    return xv*yv*zv.astype(np.complex64)
+
+def low_pass_with_cutoff(data,start,end):
+    """
+    data: 3d image data
+    sigma: sigmas for gaussian filter
+    output: data after low pass filter
+    """
+    fft_data=np.fft.fftn(data)
+    N,W,D=data.shape
+    mask=get_filtering_kernel(N,W,D,start,end)
+    filtered_data=np.fft.ifftn(mask*fft_data)
+    return np.abs(filtered_data)
+
+    
+    

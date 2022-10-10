@@ -1,0 +1,1 @@
+--sigma 2 --epoch 2000 --alpha 5 --beta 0.01 --lr 0.025
