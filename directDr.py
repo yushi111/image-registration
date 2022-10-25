@@ -35,8 +35,9 @@ print(args.sigma)
 #    filtered[:,:,:,t]=low_pass_3d(data[:,:,:,t],sigma=args.sigma)
 
 for t in range(T):
-    filtered[:,:,:,t]=low_pass_with_cutoff(data[:,:,:,t],45,55)
-show_img(filtered[:,:,10,10],additional_data=data[:,:,10,10],name='filter.png')
+    filtered[:,:,:,t]=low_pass_with_cutoff(data[:,:,:,t],42,52)
+show_img(filtered[:,:,10,10],additional_data=data[:,:,10,10],name='filter5060_1.png')
+show_img(filtered[:,:,12,10],additional_data=data[:,:,12,10],name='filter5060_2.png')
 
 init_coor=get_3d_coordinate(N,W,D)
 #print(data[:,:,20,15],filtered[:,:,20,15])
@@ -45,12 +46,13 @@ filtered=torch.tensor(filtered,dtype=torch.float64).to(DEIVICE)
 #ref_img=get_ref(filtered.cpu()).to(DEIVICE)
 #ref_img=filtered[:,:,:,5]
 #show_img(ref_img[:,:,20].cpu(),additional_data=ref_img[:,:,30].cpu(),name='ref.jpg')
-Display_slice=20
+Display_slice=12
 EPOCH=args.epoch
+print(EPOCH)
 Alpha=args.alpha
 Beta=args.beta
 IMGNORM=N*W*D
-Ref_width=5
+Ref_width=7
 #fix here time is not correct
 if Ref_width%2==0:
     Ref_width+=1
@@ -62,6 +64,7 @@ for t in tqdm(range(T)):
         ref_img=torch.mean(filtered[:,:,:,t-offset:T],dim=3)
     else:
         ref_img=torch.mean(filtered[:,:,:,t-offset:t+offset],dim=3)
+    show_img(ref_img[:,:,10].cpu().detach(),name=f"ref{t}.png")
     dr=torch.randn((N,W,D,3),dtype=torch.double,device=DEIVICE,requires_grad=True)
     dr=nn.init.kaiming_uniform(dr)
     optimizer=optim.Adam([dr],args.lr)
@@ -99,9 +102,10 @@ for t in tqdm(range(T)):
         #scheduler.step(loss)
         
         real=sampler(data=data[:,:,:,t].detach(),displacement=dr.detach(),devices=DEIVICE)
-        if epoch%500==0:
+        if epoch%500==499:
             #plot_3dvector_field(init_coor,dr.cpu().detach(),name=f'vectorf{t}_{epoch}.svg')
-            show_img(data=data[:,:,Display_slice,t].cpu(),additional_data=real[:,:,Display_slice].cpu(),name=f"epoch{t} {epoch}.png")
+            show_img(data=real[:,:,Display_slice].cpu(),name=f"epoch{t} real {epoch}.png")
+            show_img(data=data[:,:,Display_slice,t].cpu(),name=f"epoch{t} processed {epoch}.png")
             show_img(real[:,:,Display_slice].cpu(),additional_data=(data[:,:,Display_slice,t]-real[:,:,Display_slice]).cpu(),name=f"diff{t} {epoch}.png")
             plot_loss(stepx,loss_history,epoch,t,div=div_history)
             #for para in optimizer.param_groups:
@@ -112,4 +116,4 @@ for t in tqdm(range(T)):
         #    break
     real=sampler(data=data[:,:,:,t].detach(),displacement=dr.detach(),devices=DEIVICE)
     torch.save(real,f"processed{t}.pt")
-    torch.save(dr.cpu().detach(),f"dr{t}.pt")
+    #torch.save(dr.cpu().detach(),f"dr{t}.pt")

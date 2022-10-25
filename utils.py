@@ -63,12 +63,30 @@ def show_img(data,name="test.jpg",additional_data=None,argv=None):
             plt.imshow(data,cmap='gray')
             plt.savefig(name)
     elif len(data.shape)==3:
-        fig,ax=plt.subplots(2,2)
-        for i,slice in enumerate(argv):
-            plt.sca(ax[i//2][i%2])
-            plt.imshow(data[:,:,slice],cmap='gray')
+        if argv is None:
+            fig,ax=plt.subplots(2,2)
+            for i,slice in enumerate(argv):
+                plt.sca(ax[i//2][i%2])
+                plt.imshow(data[:,:,slice],cmap='gray')
 
-        plt.savefig(name)
+            plt.savefig(name)
+        else:
+            N,S,W=data.shape
+            nrows=floor(sqrt(len(argv)))
+            ncols=ceil(sqrt(len(argv)))
+            if nrows*ncols<len(argv):
+                nrows+=1
+            fig, ax = plt.subplots()
+            img_data=np.zeros((N*nrows,S*ncols))
+
+            
+            for idx,s in enumerate(argv):
+                row_start=idx//ncols
+                col_start=idx%ncols
+                img_data[row_start*N:(row_start+1)*N,col_start*S:(col_start+1)*S]=data[:,:,s]
+            ax.imshow(img_data,cmap=cm.Greys_r)
+            plt.savefig(name)
+
     else:
         raise NotImplementedError("Only support 2/3 D data")
     
@@ -99,7 +117,7 @@ def sampler(data,displacement,devices='cpu'):
     zaxis=torch.linspace(0,D-1,steps=D,dtype=torch.float64)
     xx,yy,zz=torch.meshgrid(xaxis,yaxis,zaxis)
     if devices != 'cpu':
-        coordinates=torch.stack((zz,yy,xx),dim=3).cuda()
+        coordinates=torch.stack((zz,yy,xx),dim=3).to(devices)
     else:
         coordinates=torch.stack((zz,yy,xx),dim=3)
 
